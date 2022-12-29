@@ -1,0 +1,11 @@
+{
+    "plex_url" : "http://192.168.1.45:32400",
+    "plex_token" : "sdfsdfsdf",
+    "music_lib_section_name" : "Music",
+    "sync_days_margin" : 1,
+    "force_sync_all_playlists" : false,
+    "nvidia_shield_storage_path" : "//192.168.1.45/Storage1/",
+    "nvidia_shield_music_relative_root_path" : "Media/Music/",
+    "nvidia_shield_playlists_relative_root_path" : "Media/Music/Playlists/",
+    "nvidia_shield_id" : "SDFSKJH564SDF"
+}
