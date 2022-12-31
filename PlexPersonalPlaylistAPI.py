@@ -14,7 +14,8 @@ import PlaylistEditDetectionAndConversion
 
 #global settings
 
-DEFAULT_PLEX_CONFIG = CustomPlexConfig("PlexServerDefaultConfig.json")
+JSON_DATA_FILE = os.path.join(os.path.dirname(__file__), "PlexServerDefaultConfig.json")
+DEFAULT_PLEX_CONFIG = CustomPlexConfig(JSON_DATA_FILE)
 
 DEFAULT_PLEX_URL = DEFAULT_PLEX_CONFIG.get("plex_url")
 DEFAULT_PLEX_TOKEN = DEFAULT_PLEX_CONFIG.get("plex_token")
@@ -63,7 +64,7 @@ We can bypass the latter by setting force_sync to true.
 def diff_playlists(plex_server, music_lib_section_id, unmodified_playlists_dir, force_sync):
     
     if not os.path.exists(unmodified_playlists_dir) or not os.path.isdir(unmodified_playlists_dir):
-        logger.error("%s does not exist or is not a directory!", unmodified_playlists_dir)
+        logger.error("%s does not exist or is not a directory!\n", unmodified_playlists_dir)
         return None, None, None
     
     synced_playlists_names = dict() #playlist name, folder
@@ -84,11 +85,11 @@ def diff_playlists(plex_server, music_lib_section_id, unmodified_playlists_dir, 
                     synced_playlist_name = sub_dir_file_or_sub_dir.split(".")[0]
                     synced_playlists_names[synced_playlist_name] = file_or_sub_dir
                 else:
-                    logger.error("The directories hierarchy is deeper than one level in %s!" % sub_file_path)
+                    logger.error("The directories hierarchy is deeper than one level in %s!\n" % sub_file_path)
 
     
     if len(synced_playlists_names) == 0:
-        logger.error("%s does not contain any playlist files!", unmodified_playlists_dir)
+        logger.error("%s does not contain any playlist files!\n", unmodified_playlists_dir)
         return None, None, None
     
     plex_music_playlists_names = [x.title for x in plex_server.playlists(playlistType="audio", sectionId=music_lib_section_id)]
@@ -120,10 +121,10 @@ def delete_playlists(plex_server, playlists_to_delete):
     for playlist in playlists_to_delete:
         playlist_obj = plex_server.playlist(title=playlist)
         if playlist_obj is not None:
-            logger.info("Requesting the deletion of playlist: " + playlist)
+            logger.info("Requesting the deletion of playlist: %s\n" % playlist)
             playlist_obj.delete()
         else:
-            logger.warning("Could not find playlist: %s" % playlist)
+            logger.warning("Could not find playlist: %s\n" % playlist)
 
       
         
@@ -132,11 +133,11 @@ def create_or_update_playlists(plex_server, music_lib_section, playlists, unmodi
     for playlist_name, playlist_folder in playlists.items():
         playlist_full_path = os.path.join(unmodified_playlists_dir, playlist_folder, playlist_name + ".m3u").replace("\\","/")
         converted_playlist_full_path = os.path.join(converted_playlists_dir, playlist_folder, playlist_name + ".m3u").replace("\\","/")
-        logger.debug("Converting the playlist: " + playlist_full_path + " to: " + converted_playlist_full_path)
+        logger.debug("Converting the playlist: %s to: %s\n" % (playlist_full_path, converted_playlist_full_path))
         PlaylistEditDetectionAndConversion.convert_playlist_for_plex(playlist_full_path, converted_playlist_full_path)
         
         plex_internal_storage_converted_playlist_full_path = os.path.join(DEFAULT_PLEX_INTERNAL_CONVERTED_PLAYLISTS_DIR, playlist_folder, playlist_name + ".m3u").replace("\\","/")
-        logger.info("Requesting the creation of playlist: " + plex_internal_storage_converted_playlist_full_path)
+        logger.info("Requesting the creation of playlist: %s\n" % (plex_internal_storage_converted_playlist_full_path))
         plex_server.createPlaylist(title=playlist_name, section=music_lib_section, m3ufilepath=plex_internal_storage_converted_playlist_full_path)
         
 
@@ -162,27 +163,27 @@ def main():
     plex_url = DEFAULT_PLEX_URL
     if args.plex_url:
         plex_url = args.plex_url
-        logger.info("Using Plex URL: " + plex_url)
+        logger.info("Using Plex URL: {}".format(plex_url))
         
     plex_token = DEFAULT_PLEX_TOKEN
     if args.plex_token:
         plex_token = args.plex_token
-        logger.info("Using Plex Token: " + plex_token)
+        logger.info("Using Plex Token: {}".format(plex_token))
     
     music_lib_section_name = DEFAULT_MUSIC_LIB_SECTION_NAME
     if args.music_lib_section_name:
         music_lib_section_name = args.music_lib_section_name
-        logger.info("Using Music Library Section Name: " + music_lib_section_name)
+        logger.info("Using Music Library Section Name: {}".format(music_lib_section_name))
         
     playlists_dir = DEFAULT_PLAYLIST_DIR
     if args.playlists_dir:
         playlists_dir = args.playlists_dir
-        logger.info("Using Playlists Directory: " + playlists_dir)
+        logger.info("Using Playlists Directory: {}".format(playlists_dir))
         
     force_sync = DEFAULT_FORCE_SYNC_ALL_PLAYLISTS
     if args.force_sync:
         force_sync = args.force_sync
-        logging.info("Using Force Sync All Playlists: " + str(force_sync))
+        logger.info("Using Force Sync All Playlists: {}".format(force_sync))
 
     unmodified_playlists_dir = playlists_dir + "Latest/"
     converted_playlists_dir = playlists_dir + "Converted/"    
@@ -211,7 +212,7 @@ def main():
             music_lib_section = section
 
     if music_lib_section is None:
-        logger.error("Music Library Section Name \"{}\" not found".format(music_lib_section_name))
+        logger.error("Music Library Section Name \"{}\" not found!\n".format(music_lib_section_name))
         sys.exit(1)
         
     playlists_to_create = [] 
@@ -220,23 +221,23 @@ def main():
     playlists_to_create, playlists_to_update, playlists_to_remove = diff_playlists(plex, music_lib_section.key, unmodified_playlists_dir, force_sync)
     
     if playlists_to_create is not None:
-        logger.info("Creating playlists: {}".format(playlists_to_create))
+        logger.info("\nCreating playlists: {}\n".format(playlists_to_create))
         create_or_update_playlists(plex, music_lib_section, playlists_to_create, unmodified_playlists_dir, converted_playlists_dir)
     else:
-        logger.error("Failed to diff created playlists!")
+        logger.error("Failed to diff created playlists!\n")
         
     if playlists_to_remove is not None:
-        logger.info("Deleting playlists: {}".format(playlists_to_remove))
+        logger.info("Deleting playlists: {}\n".format(playlists_to_remove))
         delete_playlists(plex, playlists_to_remove)
     else:
-        logger.error("Failed to diff removed playlists!")
+        logger.error("Failed to diff removed playlists!\n")
     
     if playlists_to_update is not None:
-        logger.info("Updating playlists: {}".format(playlists_to_update))
+        logger.info("Updating playlists: {}\n".format(playlists_to_update))
         delete_playlists(plex, playlists_to_update)
         create_or_update_playlists(plex, music_lib_section, playlists_to_update, unmodified_playlists_dir, converted_playlists_dir)
     else:
-        logger.error("Failed to diff updated playlists!")
+        logger.error("Failed to diff updated playlists!\n")
         
         
 if __name__ == '__main__':
